@@ -125,7 +125,7 @@
 				
 				instance.create()
 				if (id) {
-					axios.get(`/api/back/briefs/${id}`).then(res => {
+					axios.get(`/api/back/leaderNews/${id}`).then(res => {
 						state.briefForm = {
 							content: res.data.content
 						}
