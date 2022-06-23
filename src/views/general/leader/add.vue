@@ -1,46 +1,8 @@
 <template>
 	<el-card style="min-height: 100%;">
-		<el-form :model="leaderForm" :rules="rules" ref="leaderRef" label-width="100px">
-			<el-form-item label="图片" prop="img">
-				<el-upload ref="uploadRef" :action="uploadImgServer" :data="{ basket: 'img' }" :limit="1" list-type="picture-card"
-					thumbnail-mode=true :headers="{ Authorization: token }" :before-upload="handleBeforeUpload"
-					:on-success="handleUrlSuccess" :on-error="handleUrlError" :auto-upload="true" :file-list="leaderForm.fileList">
-					<template #default>
-						<el-icon>
-							<plus />
-						</el-icon>
-					</template>
-					<template #file="{ file }">
-						<div>
-							<img class="el-upload-list__item-thumbnail" v-if="leaderForm.img_url" :src="leaderForm.img_url" alt="" />
-							<span class="el-upload-list__item-actions">
-								<span v-if="leaderForm.disabled" class="el-upload-list__item-delete" @click="handleRemove">
-									<el-icon>
-										<delete />
-									</el-icon>
-								</span>
-							</span>
-						</div>
-					</template>
-				</el-upload>
-			</el-form-item>
-			<el-form-item label="姓名" prop="position">
-				<el-input v-model="leaderForm.name" placeholder="请输入姓名" type="text"></el-input>
-			</el-form-item>
-			<el-form-item label="职务" prop="position">
-				<el-input v-model="leaderForm.position" placeholder="请输入职务" type="text"></el-input>
-			</el-form-item>
-			<el-form-item label="职称" prop="professional">
-				<el-input v-model="leaderForm.professional" placeholder="请输入职称" type="text"></el-input>
-			</el-form-item>
-			<el-form-item label="排序" prop="sort">
-				<el-input v-model="leaderForm.sort" placeholder="请输入排序" type="number" min="0"></el-input>
-			</el-form-item>
-			<el-form-item label="状态" prop="status">
-				<el-radio-group v-model="leaderForm.status" disabled>
-					<el-radio label=1>已审核</el-radio>
-					<el-radio label=0>待审核</el-radio>
-				</el-radio-group>
+		<el-form :model="briefForm" :rules="rules" ref="briefRef" label-width="100px" style="margin-top: 30px;">
+			<el-form-item label="内容" prop="content">
+				<div ref='editor'></div>
 			</el-form-item>
 			<el-form-item>
 				<el-button type="primary" @click="submitAdd()">{{ id ? '立即修改' : '立即创建' }}</el-button>
@@ -52,13 +14,13 @@
 <script>
 	import {
 		Plus,
-		Delete,
 	} from '@element-plus/icons-vue'
 	import {
 		reactive,
 		ref,
 		toRefs,
 		onMounted,
+		onBeforeUnmount,
 	} from 'vue'
 	import WangEditor from 'wangeditor'
 	import axios from '@/utils/axios'
@@ -71,113 +33,132 @@
 	} from 'vue-router'
 	import {
 		sessionGet,
-		uploadImgServer
+		uploadImgsServer
 	} from '@/utils'
 
 	export default {
-		name: 'leader_add',
-		components: {
-			Plus,
-			Delete
-		},
+		name: 'brief_add',
 		setup() {
-			const leaderRef = ref(null)
-			const uploadRef = ref(null)
+			const editor = ref(null)
+			const briefRef = ref(null)
 			const route = useRoute()
 			const router = useRouter()
 			const {
 				id
 			} = route.query
-
 			const state = reactive({
 				token: 'Bearer ' + sessionGet('token') || '',
 				id: id,
-				leaderForm: {
-					img_url: '',
-					img: '',
-					name: '',
-					position: '',
-					professional: '',
-					sort: 0,
-					status: '0',
-					disabled: true,
-					fileList: []
+				briefForm: {
+					content: '',
 				},
+
 				rules: {
-					img: [{
-						required: 'true',
-						message: '图片必须',
-						trigger: ['change'],
-					}],
-					name: [{
-						required: 'true',
-						message: '姓名必须',
-						trigger: ['change'],
-					}],
-					position: [{
-						required: 'true',
-						message: '职务必须',
-						trigger: ['change'],
-					}],
-					professional: [{
-						required: 'true',
-						message: '职称必须',
-						trigger: ['change'],
-					}],
-					sort: [{
-						required: 'true',
-						message: '排序必须',
-						trigger: ['change'],
-					}],
-					status: [{
+					content: [{
 						required: false,
-						message: '状态必须',
-						trigger: ['change'],
+						message: '内容必须',
+						trigger: ['change']
 					}],
 				},
 			})
 
+			let instance
 			onMounted(() => {
+				instance = new WangEditor(editor.value)
+				instance.config.lineHeights = ['1', '1.15', '1.5', '2', '2.5', '3']
+				instance.config.showLinkImg = false
+				instance.config.showLinkImgAlt = false
+				instance.config.showLinkImgHref = false
+				instance.config.uploadImgMaxSize = 10 * 1024 * 1024 // 5M
+				instance.config.uploadImgMaxLength = 1
+				instance.config.uploadImgAccept = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+				instance.config.uploadFileName = 'file'
+				instance.config.uploadImgHeaders = {
+					Authorization: state.token
+				}
+				instance.config.uploadImgParams = {
+					basket: 'img'
+				}
+				// 图片返回格式不同，需要自定义返回格式
+				instance.config.uploadImgHooks = {
+					// 图片上传并返回了结果，想要自己把图片插入到编辑器中
+					// 例如服务器端返回的不是 { errno: 0, data: [...] } 这种格式，可使用 customInsert
+					customInsert: function(insertImgFn, result) {
+						console.log('result', result)
+						// result 即服务端返回的接口
+						// insertImgFn 可把图片插入到编辑器，传入图片 src ，执行函数即可
+						insertImgFn(result.data.src)
+						// if (result.data && result.data.length) {
+						// 	result.data.forEach(item => insertImgFn(item))
+						// }
+					}
+				}
+				instance.config.uploadImgServer = uploadImgsServer
+				Object.assign(instance.config, {
+					onchange() {
+						console.log('change')
+					},
+				})
+				
+				instance.config.uploadVideoServer = uploadImgsServer
+				instance.config.uploadVideoMaxSize = 1 * 200 * 1024 * 1024 // 1024m
+				instance.config.uploadVideoAccept = ['mp4']
+				instance.config.uploadVideoParams = {
+				    basket: 'video',
+				}
+				instance.config.uploadVideoName = 'file'
+				instance.config.uploadVideoHeaders = {
+				    Authorization: state.token
+				}
+				
+				instance.config.uploadVideoHooks = {
+					// 视频上传并返回了结果，想要自己把视频插入到编辑器中
+					// 例如服务器端返回的不是 { errno: 0, data: { url : '.....'} } 这种格式，可使用 customInsert
+					customInsert: function(insertVideoFn, result) {
+						// result 即服务端返回的接口
+						console.log('customInsert', result)
+				
+						// insertVideoFn 可把视频插入到编辑器，传入视频 src ，执行函数即可
+						insertVideoFn(result.data.src)
+					}
+				}
+				
+				instance.create()
 				if (id) {
-					axios.get(`/api/back/leaders/${id}`).then(res => {
-						state.leaderForm = {
-							img_url: res.data.url || '',
-							img: res.data.file_id,
-							name: res.data.name,
-							position: res.data.position,
-							professional: res.data.professional,
-							sort: res.data.sort,
-							status: String(res.data.status),
-							fileList: [{url: res.data.url}],
-							disabled: true
+					axios.get(`/api/back/briefs/${id}`).then(res => {
+						state.briefForm = {
+							content: res.data.content
+						}
+						if (instance) {
+							// 初始化商品详情 html
+							instance.txt.html(res.data.content)
 						}
 					})
 				}
 			})
-
+			onBeforeUnmount(() => {
+				instance.destroy()
+				instance = null
+			})
+			
 			const submitAdd = () => {
-				leaderRef.value.validate((vaild) => {
+				briefRef.value.validate((vaild) => {
 					if (vaild) {
 						// 默认新增用 post 方法
 						let httpOption = axios.post
 						let params = {
-							img: state.leaderForm.img,
-							name: state.leaderForm.name,
-							position: state.leaderForm.position,
-							professional: state.leaderForm.professional,
-							sort: state.leaderForm.sort,
-							status: state.leaderForm.status,
+							content: instance.txt.html(),
 						}
-
-
-						let url = '/api/back/leaders'
+			
+						let url = '/api/back/leaderNews'
+						
 						if (id) {
 							// params.id = id
 							// 修改商品使用 put 方法
 							httpOption = axios.put
-							url = `/api/back/leaders/${id}`
+							url = `/api/back/leaderNews/${id}`
 						}
-						
+			
 						httpOption(url, params).then(() => {
 							if (id) {
 								ElMessage.success('修改成功')
@@ -192,41 +173,11 @@
 				})
 			}
 
-			const handleBeforeUpload = (file) => {
-				const sufix = file.name.split('.')[1] || ''
-				if (!['jpg', 'jpeg', 'png'].includes(sufix)) {
-					ElMessage.error('请上传 jpg、jpeg、png 格式的图片')
-					return false
-				}
-			}
-
-			const handleUrlSuccess = (val) => {
-				ElMessage.success('上传成功')
-				state.leaderForm.img_url = val.data.src || ''
-				state.leaderForm.img = val.data.id || ''
-			}
-			
-			const handleUrlError = (val) => {
-				ElMessage.error('上传失败')
-			}
-
-			const handleRemove = (file) => {
-				uploadRef.value.clearFiles()
-				state.leaderForm.img = ''
-				state.leaderForm.img_url = ''
-				state.leaderForm.fileList = []
-			}
-
 			return {
 				...toRefs(state),
-				uploadRef,
-				leaderRef,
-				submitAdd,
-				uploadImgServer,
-				handleBeforeUpload,
-				handleUrlSuccess,
-				handleUrlError,
-				handleRemove
+				editor,
+				briefRef,
+				submitAdd
 			}
 		}
 	}
