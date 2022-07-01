@@ -6,6 +6,6 @@ export default {
     baseUrl: '//120.26.124.151:8001' // 正式接口域名
   },
   production: {
-    baseUrl: '//adm.666120.cn' // 正式接口域名
+    baseUrl: '//api.666120.cn' // 正式接口域名
   }
 }
