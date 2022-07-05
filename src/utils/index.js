@@ -154,6 +154,11 @@ export const pathMap = {
 	role: '角色管理',
 	role_add: '角色管理',
 	
+	// 疫情防控
+	epidemic_control: '疫情防控',
+	epidemic_control_add: '疫情防控',
+	epidemic_control_preview: '疫情防控预览',
+	
 
 	api_test: 'api 测试',
 	good: '商品列表',

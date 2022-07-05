@@ -401,7 +401,22 @@ const router = createRouter({
 		name: 'role_add',
 		component: () => import('../views/role/add.vue'),
 	},
-	
+	// 疫情防控
+	{
+	  path: '/epidemic-control',
+	  name: 'epidemic_control',
+	  component: () => import('../views/epidemic_control/index.vue'),
+	},
+	{
+		path: '/epidemic-control-add',
+		name: 'epidemic_control_add',
+		component: () => import('../views/epidemic_control/add.vue'),
+	},
+	{
+		path: '/epidemic-control-preview',
+		name: 'epidemic_control_preview',
+		component: () => import('../views/epidemic_control/preview.vue'),
+	},
 	
 	
 	

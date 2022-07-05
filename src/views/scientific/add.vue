@@ -40,7 +40,7 @@
 				<div ref='editor' style="z-index: 1;"></div>
 			</el-form-item>
 			<el-form-item label="发布时间" prop="release_time">
-				<el-date-picker v-model="Form.release_time" type="datetime" :default-value="new Date()"
+				<el-date-picker v-model="Form.release_time" type="datetime"
 					placeholder="请输入发布时间">
 				</el-date-picker>
 			</el-form-item>
