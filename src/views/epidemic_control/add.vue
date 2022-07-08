@@ -1,9 +1,5 @@
 <template>
 	<el-card style="min-height: 100%;">
-		<el-descriptions title="提示">
-		    <el-descriptions-item>应聘流程只可新增一次</el-descriptions-item>
-		</el-descriptions>
-		<el-divider></el-divider>
 		<el-form :model="Form" :rules="rules" ref="Ref" label-width="100px">
 			<!-- <el-form-item label="封面图" prop="img">
 				<el-upload ref="uploadRef" :action="uploadImgServer" :data="{ basket: 'img' }" :limit="1"
