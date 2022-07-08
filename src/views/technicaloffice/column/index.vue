@@ -7,7 +7,7 @@
 				<el-input style="width: 200px; margin-top: 20px; margin-right: 10px;" placeholder="请输入栏目名称" v-model="column_name" clearable />
 				<el-input style="width: 200px; margin-top: 20px; margin-right: 10px;" placeholder="请输入标题" v-model="title" clearable />
 				<el-button type="primary" @click="handleOption">搜索</el-button>
-				<el-button type="primary" @click="handleHealthPromotion">设置为健康促进</el-button>
+				<el-button type="primary" @click="handleHealthPromotion">设置为健康科普</el-button>
 			</div>
 		</template>
 
@@ -28,6 +28,12 @@
 			<el-table-column prop="release_time" label="发布时间" />
 			<el-table-column prop="num" label="浏览次数" />
 			<el-table-column prop="sort" label="排序" />
+			<el-table-column prop="is_health_promotion_set" label="是否设置健康科普">
+				<template #default="scope">
+					<span style="color: #67C23A;" v-if="scope.row.is_health_promotion_set == 1">是</span>
+					<span style="color: #F56C6C;" v-else>否</span>
+				</template>
+			</el-table-column>
 			<el-table-column prop="status" label="状态">
 				<template #default="scope">
 					<span style="color: #67C23A;" v-if="scope.row.status == 1">已审核</span>
